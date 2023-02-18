@@ -11,7 +11,6 @@
 #include "EnhancedInputSubsystems.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "TimerManager.h"
-#include "PlayerHUD.h"
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -119,11 +118,18 @@ void AAssignmentCharacter::SetupPlayerInputComponent(class UInputComponent* Play
 		//Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AAssignmentCharacter::Look);
 
-		//Looking
+		//Shooting
 		EnhancedInputComponent->BindAction(ShootAction, ETriggerEvent::Triggered, this, &AAssignmentCharacter::Shoot);
 
+		//Shooting
+		EnhancedInputComponent->BindAction(PauseAction, ETriggerEvent::Triggered, this, &AAssignmentCharacter::Pause);
 	}
 
+}
+
+void AAssignmentCharacter::Pause(const FInputActionValue& Value)
+{
+	OnPauseGame.Broadcast();
 }
 
 void AAssignmentCharacter::Shoot(const FInputActionValue& Value)
@@ -245,6 +251,13 @@ void AAssignmentCharacter::TakeDamage(AActor* DamagedActor, float DamageAmount, 
 	SetCanBeDamaged(false);
 	bRedFlash = true;
 	UpdateHealth(-DamageAmount);
+
+	if (FMath::IsNearlyZero(HealthPercentage, 0.001f))
+	{
+		OnPlayerDied.Broadcast();
+		return;
+	}
+
 	DamageTimer();
 }
 

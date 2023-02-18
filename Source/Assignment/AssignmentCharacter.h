@@ -8,6 +8,8 @@
 #include "Components/TimelineComponent.h"
 #include "AssignmentCharacter.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FPlayerDiedSignature); //, AActor, OnPlayerDied
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FPauseGameSignature);
 
 UCLASS(config=Game)
 class AAssignmentCharacter : public ACharacter
@@ -46,6 +48,10 @@ class AAssignmentCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 		class UInputAction* RunAction;
 
+	/** Pause Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+		class UInputAction* PauseAction;
+
 public:
 	AAssignmentCharacter();
 	
@@ -62,6 +68,9 @@ protected:
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
 
+	/** Pausefor looking input */
+	void Pause(const FInputActionValue& Value);
+
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -76,6 +85,13 @@ public:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+
+	UPROPERTY(BlueprintAssignable, Category = "Game|Damage")
+		FPlayerDiedSignature OnPlayerDied;
+
+	UPROPERTY(BlueprintAssignable, Category = "Game|Pause")
+		FPauseGameSignature OnPauseGame;
+	
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
 		float FullHealth;

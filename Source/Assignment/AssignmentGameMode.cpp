@@ -17,13 +17,28 @@ AAssignmentGameMode::AAssignmentGameMode()
 		DefaultPawnClass = PlayerPawnBPClass.Class;
 	}
 
-	static ConstructorHelpers::FClassFinder<UUserWidget> HealthBar(TEXT("/Game/UI/HUD_Widget"));
-	HUDWidgetClass = HealthBar.Class;
+	static ConstructorHelpers::FClassFinder<UUserWidget> GameplayWidget(TEXT("/Game/UI/WBP_GameplayHUD"));
+	HUDWidgetClass = GameplayWidget.Class;
 
 	// use our custom HUD class
 	HUDClass = AHUD::StaticClass();
 
-	// add Health Bar UI to viewport
+
+}
+
+void AAssignmentGameMode::BeginPlay()
+{
+	Super::BeginPlay();
+
+	SetCurrentState(EGamePlayState::EPlaying);
+
+	MyCharacter = Cast<AAssignmentCharacter>(UGameplayStatics::GetPlayerPawn(this, 0));
+
+	//Bind to OnPlayerDied
+	MyCharacter->OnPlayerDied.AddDynamic(this, &AAssignmentGameMode::HandlePlayerDeath);
+	MyCharacter->OnPauseGame.AddDynamic(this, &AAssignmentGameMode::HandlePauseGame);
+
+	// Add Gameplay UI to viewport
 	if (HUDWidgetClass != nullptr)
 	{
 		CurrentWidget = CreateWidget<UUserWidget>(GetWorld(), HUDWidgetClass);
@@ -33,29 +48,12 @@ AAssignmentGameMode::AAssignmentGameMode()
 			CurrentWidget->AddToViewport();
 		}
 	}
-}
 
-void AAssignmentGameMode::BeginPlay() {
-
-	Super::BeginPlay();
-
-	SetCurrentState(EGamePlayState::EPlaying);
-
-	MyCharacter = Cast<AAssignmentCharacter>(UGameplayStatics::GetPlayerPawn(this, 0));
 }
 
 void AAssignmentGameMode::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	if (MyCharacter)
-	{
-		if (FMath::IsNearlyZero(MyCharacter->GetHealth(), 0.001f))
-		{
-			SetCurrentState(EGamePlayState::EGameOver);
-		}
-
-	}
 }
 EGamePlayState AAssignmentGameMode::GetCurrentState() const
 {
@@ -72,29 +70,48 @@ void AAssignmentGameMode::HandleNewState(EGamePlayState NewState)
 {
 	switch (NewState)
 	{
-	case EGamePlayState::EPlaying:
-		{
-			//Do nothing
-		}
-		break;
+		case EGamePlayState::EPlaying:
+			{
+				//Do nothing
+			//UGameplayStatics::SetGamePaused(this, false);
+			//SetPause(GetPlayerController(),true);
+			}
+			break;
 
-	case EGamePlayState::EGameOver:
-		{
-			UGameplayStatics::OpenLevel(this, FName(*GetWorld()->GetName()), false);
-		}
-		break;
+		case EGamePlayState::EGameOver:
+			{
+				UGameplayStatics::OpenLevel(this, FName(*GetWorld()->GetName()), false);
+			}
+			break;
 
-	case EGamePlayState::EPaused:
-		{
-			UGameplayStatics::SetGamePaused(this, true);
-		}
+		case EGamePlayState::EPaused:
+			{
+				//UGameplayStatics::SetGamePaused(this, true);
+			}
+			break;
 
-	default:
-	case EGamePlayState::EUnknown:
-		{
-			//Do nothing
-		}
-		break;
+		default:
+		case EGamePlayState::EUnknown:
+			{
+				//Do nothing
+			}
+			break;
 	}
 }
 
+void AAssignmentGameMode::HandlePlayerDeath()
+{
+	//We restert level when player dies
+	SetCurrentState(EGamePlayState::EGameOver);
+}
+void AAssignmentGameMode::HandlePauseGame()
+{
+	if (UGameplayStatics::IsGamePaused(this))
+	{
+		SetCurrentState(EGamePlayState::EPlaying);
+	}
+	else if (!UGameplayStatics::IsGamePaused(this))
+	{
+		SetCurrentState(EGamePlayState::EPaused);
+	}
+}

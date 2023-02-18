@@ -6,6 +6,9 @@
 #include "GameFramework/GameModeBase.h"
 #include "AssignmentGameMode.generated.h"
 
+//DECLARE_DYNAMIC_MULTICAST_SPARSE_DELEGATE_OneParam(FPlayerDiedSignature, AActor, OnBeginCursorOver, AActor*, TouchedActor);
+
+
 UENUM()
 enum class EGamePlayState
 {
@@ -37,10 +40,18 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Health")
 		class UUserWidget* CurrentWidget;
 
+	bool bIsGamePaused;
+
 	UFUNCTION(BlueprintPure, Category = "Health")
 		EGamePlayState GetCurrentState() const;
 
 	void SetCurrentState(EGamePlayState NewState);
+
+	UFUNCTION()
+		void HandlePlayerDeath();
+
+	UFUNCTION()
+		void HandlePauseGame();
 
 private:
 	EGamePlayState CurrentState;
