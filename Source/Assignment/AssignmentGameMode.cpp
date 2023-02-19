@@ -42,7 +42,7 @@ void AAssignmentGameMode::BeginPlay()
 	if (HUDWidgetClass != nullptr)
 	{
 		CurrentWidget = CreateWidget<UUserWidget>(GetWorld(), HUDWidgetClass);
-
+	
 		if (CurrentWidget)
 		{
 			CurrentWidget->AddToViewport();
